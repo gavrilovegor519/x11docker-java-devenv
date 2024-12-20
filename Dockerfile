@@ -5,6 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt dist-upgrade -y
 RUN apt-mark hold iptables && \
     apt install -y --no-install-recommends \
+      locales \
       wget \
       gpg && \
     apt install -y --no-install-recommends \
