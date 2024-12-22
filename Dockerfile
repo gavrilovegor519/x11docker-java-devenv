@@ -1,14 +1,9 @@
-FROM debian:bookworm
+FROM eclipse-temurin:21-jdk-noble
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt dist-upgrade -y
-RUN apt-mark hold iptables && \
-    apt install -y --no-install-recommends \
-      locales \
-      wget \
-      gpg && \
-    apt install -y --no-install-recommends \
+RUN apt install -y --no-install-recommends \
       dbus-x11 \
       psmisc \
       xdg-utils \
@@ -72,8 +67,18 @@ startxfce4\n\
 " > /usr/local/bin/start && \
 chmod +x /usr/local/bin/start
 
-RUN apt install firefox-esr -y
-RUN apt install openjdk-17-jdk git maven -y
+RUN install -d -m 0755 /etc/apt/keyrings && \
+      wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null && \
+      echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" | tee -a /etc/apt/sources.list.d/mozilla.list > /dev/null
+
+RUN <<EOF cat >> /etc/apt/preferences.d/mozilla
+Package: *
+Pin: origin packages.mozilla.org
+Pin-Priority: 1000
+EOF
+
+RUN apt update && apt install firefox -y
+RUN apt install git maven gradle -y
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg && \
     install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg && \
     echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null && \
